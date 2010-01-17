@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            category="com.pittypanda.plugins.couch.category"
+            class="com.pittypanda.plugins.couch.CouchWizard"
+            descriptionImage="icons/logo.png"
+            icon="icons/bridge.png"
+            id="com.pittypanda.plugins.couch.wizard"
+            name="CouchDB Application"
+            project="true">
+         <description>
+            Create a CouchDB Application
+         </description>
+      </wizard>
+      <category
+            id="com.pittypanda.plugins.couch.category"
+            name="CouchDB">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            id="com.pittypanda.plugins.couch.commands.push"
+            name="Push">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="com.pittypanda.plugins.couch.toolbar">
+            <command
+                  commandId="com.pittypanda.plugins.couch.commands.push"
+                  disabledIcon="icons/disabled.gif"
+                  icon="icons/bridge.png"
+                  label="Push"
+                  style="push">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+   <extension point="org.eclipse.core.resources.natures"
+              id="com.pittypanda.plugins.couch.nature"
+              name="CouchApps Nature">
+     <runtime>
+       <run class="com.pittypanda.plugins.couch.Nature"></run>
+     </runtime>
+   </extension>
+   <extension point="org.eclipse.ui.ide.projectNatureImages">
+     <image icon="icons/overlay.gif"
+            natureId="com.pittypanda.plugins.couch.nature"
+            id="com.pittypanda.plugins.couch.natureimage">
+     </image>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="com.pittypanda.plugins.couch.commands.PushHandler"
+            commandId="com.pittypanda.plugins.couch.commands.push">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <iterate
+                     ifEmpty="false">
+                  <test
+                        property="org.eclipse.core.resources.projectNature"
+                        value="com.pittypanda.plugins.couch.nature">
+                  </test>
+               </iterate>
+            </with>
+         </enabledWhen>
+      </handler>
+   </extension>
+</plugin>

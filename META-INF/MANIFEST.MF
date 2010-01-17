@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: CouchDB Applications Plugin
+Bundle-SymbolicName: com.pittypanda.plugins.couch;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: com.pittypanda.plugins.couch.Activator
+Bundle-Vendor: PITTYPANDA
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.ide;bundle-version="3.5.1",
+ org.eclipse.core.resources;bundle-version="3.5.1"
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: libraries/json_simple-1.1.jar,
+ .
