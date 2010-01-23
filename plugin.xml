@@ -6,8 +6,8 @@
       <wizard
             category="com.pittypanda.plugins.couch.category"
             class="com.pittypanda.plugins.couch.CouchWizard"
-            descriptionImage="icons/logo.png"
-            icon="icons/bridge.png"
+            descriptionImage="icons/couchdb-logo.png"
+            icon="icons/couchdb-icon.png"
             id="com.pittypanda.plugins.couch.wizard"
             name="CouchDB Application"
             project="true">
@@ -37,7 +37,7 @@
                   commandId="com.pittypanda.plugins.couch.commands.push"
                   disabledIcon="icons/disabled.gif"
                   icon="icons/bridge.png"
-                  label="Push"
+                  label="Deploy CouchApp"
                   style="push">
             </command>
          </toolbar>
