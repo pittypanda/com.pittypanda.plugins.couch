@@ -20,7 +20,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
 
-import com.pittypanda.plugins.couch.utils.Executor;
+import com.pittypanda.plugins.couch.glue.*;
 
 public class CouchWizard extends Wizard implements INewWizard {
   WizardNewProjectCreationPage page;
@@ -84,12 +84,26 @@ public class CouchWizard extends Wizard implements INewWizard {
       monitor.subTask("Create project directory");
       project.create(description, monitor);
 
+      monitor.worked(25);
+      monitor.subTask("loading couchapp runtime");
+
+      CouchApplicationType couchapp = (CouchApplicationType)JythonObjectFactory.createObject(
+          CouchApplicationType.class, "CouchApplication"
+      );
+
       monitor.worked(50);
+      monitor.subTask("generating couchapp");
       
       String command = "couchapp generate app " + project.getLocation().toOSString();
       command += System.getProperty("file.separator") + "app " + project.getName();
+      
+      String sep = System.getProperty("file.separator");
+      
+      String location = project.getLocation().toOSString() + sep + "app";
+      String[] params = { "generate", "app", location + sep + project.getName() };
+      System.out.println(couchapp.dispatch(params));
             
-      Executor.run(command);
+      //Executor.run(command);
 
       try {
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
