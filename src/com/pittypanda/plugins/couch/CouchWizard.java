@@ -100,7 +100,7 @@ public class CouchWizard extends Wizard implements INewWizard {
       String sep = System.getProperty("file.separator");
       
       String location = project.getLocation().toOSString() + sep + "app";
-      String[] params = { "generate", "app", location + sep + project.getName() };
+      String[] params = { "generate", "app", location };
       System.out.println(couchapp.dispatch(params));
             
       //Executor.run(command);
