@@ -105,6 +105,9 @@ public class CouchWizard extends Wizard implements INewWizard {
             
       //Executor.run(command);
 
+      monitor.worked(75);
+      monitor.subTask("configuration");
+      
       try {
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
         
