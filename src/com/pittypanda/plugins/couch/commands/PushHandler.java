@@ -21,7 +21,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.pittypanda.plugins.couch.ComboDialog;
-import com.pittypanda.plugins.couch.utils.Executor;
+import com.pittypanda.plugins.couch.glue.CouchApplication;
+import com.pittypanda.plugins.couch.glue.CouchApplicationType;
 
 public class PushHandler extends AbstractHandler {
 
@@ -65,10 +66,11 @@ public class PushHandler extends AbstractHandler {
       String target = (dialog.getResult().split("\t"))[1];
     
       String appfolder = resource.getProject().getLocation().append("app").toOSString();
-      String command   = "couchapp push " + appfolder + " " + target;
-      System.out.println(command);
     
-      Executor.run(command);
+      CouchApplicationType couchapp = CouchApplication.getInstance();
+      
+      String[] params = { "push", appfolder, target };
+      System.out.println(couchapp.dispatch(params));
     }
 
     return null;

@@ -86,18 +86,11 @@ public class CouchWizard extends Wizard implements INewWizard {
 
       monitor.worked(25);
       monitor.subTask("loading couchapp runtime");
-
-      JythonObjectFactory factory = new JythonObjectFactory(
-          CouchApplicationType.class, "CouchApplication", "CouchApplication"
-      );
       
-      CouchApplicationType couchapp = (CouchApplicationType)factory.createObject();
+      CouchApplicationType couchapp = CouchApplication.getInstance();
 
       monitor.worked(50);
       monitor.subTask("generating couchapp");
-      
-      String command = "couchapp generate app " + project.getLocation().toOSString();
-      command += System.getProperty("file.separator") + "app " + project.getName();
       
       String sep = System.getProperty("file.separator");
       
@@ -105,8 +98,6 @@ public class CouchWizard extends Wizard implements INewWizard {
       String[] params = { "generate", "app", location };
       System.out.println(couchapp.dispatch(params));
             
-      //Executor.run(command);
-
       monitor.worked(75);
       monitor.subTask("configuration");
       
