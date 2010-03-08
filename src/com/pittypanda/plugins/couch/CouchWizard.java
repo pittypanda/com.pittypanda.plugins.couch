@@ -87,9 +87,11 @@ public class CouchWizard extends Wizard implements INewWizard {
       monitor.worked(25);
       monitor.subTask("loading couchapp runtime");
 
-      CouchApplicationType couchapp = (CouchApplicationType)JythonObjectFactory.createObject(
-          CouchApplicationType.class, "CouchApplication"
+      JythonObjectFactory factory = new JythonObjectFactory(
+          CouchApplicationType.class, "CouchApplication", "CouchApplication"
       );
+      
+      CouchApplicationType couchapp = (CouchApplicationType)factory.createObject();
 
       monitor.worked(50);
       monitor.subTask("generating couchapp");
