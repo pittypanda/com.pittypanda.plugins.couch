@@ -26,6 +26,19 @@
             id="com.pittypanda.plugins.couch.commands.push"
             name="Push">
       </command>
+      <command
+            id="com.pittypanda.plugins.couch.commands.view"
+            name="View">
+         <commandParameter
+               id="com.pittypanda.plugins.couch.commands.parameter"
+               name="name"
+               optional="true">
+         </commandParameter>
+      </command>
+      <command
+            id="com.pittypanda.plugins.couch.commands.list"
+            name="List">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -41,6 +54,61 @@
                   style="push">
             </command>
          </toolbar>
+      </menuContribution>
+      <menuContribution
+            locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+         <menu
+               commandId="com.pittypanda.plugins.couch.commands.generate"
+               icon="icons/bridge.png"
+               label="Generate CouchDB">
+            <command
+                  commandId="com.pittypanda.plugins.couch.commands.view"
+                  label="View..."
+                  style="push">
+               <parameter
+                     name="com.pittypanda.plugins.couch.commands.parameter"
+                     value="view">
+               </parameter>
+            </command>
+            <command
+                  commandId="com.pittypanda.plugins.couch.commands.list"
+                  label="List..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.pittypanda.plugins.couch.command4"
+                  label="Show..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.pittypanda.plugins.couch.command5"
+                  label="Filter..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.pittypanda.plugins.couch.command6"
+                  label="Function..."
+                  style="push">
+            </command>
+            <command
+                  commandId="com.pittypanda.plugins.couch.command7"
+                  label="Vendor..."
+                  style="push">
+            </command>
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="selection">
+                  <iterate
+                        ifEmpty="false">
+                     <test
+                           property="org.eclipse.core.resources.projectNature"
+                           value="com.pittypanda.plugins.couch.nature">
+                     </test>
+                  </iterate>
+               </with>
+            </visibleWhen>
+         </menu>
       </menuContribution>
    </extension>
    <extension point="org.eclipse.core.resources.natures"
@@ -73,6 +141,10 @@
                </iterate>
             </with>
          </enabledWhen>
+      </handler>
+      <handler
+            class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
+            commandId="com.pittypanda.plugins.couch.commands.view">
       </handler>
    </extension>
 </plugin>
