@@ -100,8 +100,8 @@
             locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
          <menu
                commandId="com.pittypanda.plugins.couch.commands.generate"
-               icon="icons/couchdb-icon.png"
-               label="Generate">
+               icon="icons/bridge.png"
+               label="Generate CouchDB">
             <command
                   commandId="com.pittypanda.plugins.couch.commands.view"
                   label="View..."
@@ -139,7 +139,7 @@
                </parameter>
             </command>
             <command
-                  commandId="com.pittypanda.plugins.couch.commands.filter"
+                  commandId="com.pittypanda.plugins.couch.commands.function"
                   label="Function..."
                   style="push">
                <parameter
@@ -221,11 +221,11 @@
       </handler>
       <handler
             class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
-            commandId="com.pittypanda.plugins.couch.commands.function">
+            commandId="com.pittypanda.plugins.couch.commands.functionx">
       </handler>
       <handler
             class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
-            commandId="com.pittypanda.plugins.couch.commands.vendor">
+            commandId="com.pittypanda.plugins.couch.commands.vendorx">
       </handler>
    </extension>
 </plugin>
