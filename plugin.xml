@@ -38,6 +38,47 @@
       <command
             id="com.pittypanda.plugins.couch.commands.list"
             name="List">
+         <commandParameter
+               id="com.pittypanda.plugins.couch.commands.parameter"
+               name="name"
+               optional="true">
+         </commandParameter>
+      </command>
+      <command
+            id="com.pittypanda.plugins.couch.commands.show"
+            name="Show">
+         <commandParameter
+               id="com.pittypanda.plugins.couch.commands.parameter"
+               name="name"
+               optional="true">
+         </commandParameter>
+      </command>
+      <command
+            id="com.pittypanda.plugins.couch.commands.filter"
+            name="Filter">
+         <commandParameter
+               id="com.pittypanda.plugins.couch.commands.parameter"
+               name="name"
+               optional="true">
+         </commandParameter>
+      </command>
+      <command
+            id="com.pittypanda.plugins.couch.commands.function"
+            name="Function">
+         <commandParameter
+               id="com.pittypanda.plugins.couch.commands.parameter"
+               name="name"
+               optional="true">
+         </commandParameter>
+      </command>
+      <command
+            id="com.pittypanda.plugins.couch.commands.vendor"
+            name="Vendor">
+         <commandParameter
+               id="com.pittypanda.plugins.couch.commands.parameter"
+               name="name"
+               optional="true">
+         </commandParameter>
       </command>
    </extension>
    <extension
@@ -59,8 +100,8 @@
             locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
          <menu
                commandId="com.pittypanda.plugins.couch.commands.generate"
-               icon="icons/bridge.png"
-               label="Generate CouchDB">
+               icon="icons/couchdb-icon.png"
+               label="Generate">
             <command
                   commandId="com.pittypanda.plugins.couch.commands.view"
                   label="View..."
@@ -74,26 +115,46 @@
                   commandId="com.pittypanda.plugins.couch.commands.list"
                   label="List..."
                   style="push">
+               <parameter
+                     name="com.pittypanda.plugins.couch.commands.parameter"
+                     value="list">
+               </parameter>
             </command>
             <command
-                  commandId="com.pittypanda.plugins.couch.command4"
+                  commandId="com.pittypanda.plugins.couch.commands.show"
                   label="Show..."
                   style="push">
+               <parameter
+                     name="com.pittypanda.plugins.couch.commands.parameter"
+                     value="show">
+               </parameter>
             </command>
             <command
-                  commandId="com.pittypanda.plugins.couch.command5"
+                  commandId="com.pittypanda.plugins.couch.commands.filter"
                   label="Filter..."
                   style="push">
+               <parameter
+                     name="com.pittypanda.plugins.couch.commands.parameter"
+                     value="filter">
+               </parameter>
             </command>
             <command
-                  commandId="com.pittypanda.plugins.couch.command6"
+                  commandId="com.pittypanda.plugins.couch.commands.filter"
                   label="Function..."
                   style="push">
+               <parameter
+                     name="com.pittypanda.plugins.couch.commands.parameter"
+                     value="function">
+               </parameter>
             </command>
             <command
-                  commandId="com.pittypanda.plugins.couch.command7"
+                  commandId="com.pittypanda.plugins.couch.commands.vendor"
                   label="Vendor..."
                   style="push">
+               <parameter
+                     name="com.pittypanda.plugins.couch.commands.parameter"
+                     value="vendor">
+               </parameter>
             </command>
             <visibleWhen
                   checkEnabled="false">
@@ -145,6 +206,26 @@
       <handler
             class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
             commandId="com.pittypanda.plugins.couch.commands.view">
+      </handler>
+      <handler
+            class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
+            commandId="com.pittypanda.plugins.couch.commands.list">
+      </handler>
+      <handler
+            class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
+            commandId="com.pittypanda.plugins.couch.commands.show">
+      </handler>
+      <handler
+            class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
+            commandId="com.pittypanda.plugins.couch.commands.filter">
+      </handler>
+      <handler
+            class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
+            commandId="com.pittypanda.plugins.couch.commands.function">
+      </handler>
+      <handler
+            class="com.pittypanda.plugins.couch.commands.GeneratorsHandler"
+            commandId="com.pittypanda.plugins.couch.commands.vendor">
       </handler>
    </extension>
 </plugin>
