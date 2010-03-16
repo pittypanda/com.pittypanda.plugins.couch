@@ -23,9 +23,10 @@ public class GeneratorsHandler extends AbstractHandler {
     IPath     location = resource.getProject().getLocation();
 
     String generator = event.getParameter("com.pittypanda.plugins.couch.commands.parameter");
+    String Generator = Character.toUpperCase(generator.charAt(0)) + generator.substring(1);
     
     InputDialog dialog = new InputDialog(
-        shell, "Generate " + generator, generator + " name", location.toOSString(), null
+        shell, "Generate " + generator, Generator + " name", "", null
     );
     
     dialog.open();
@@ -33,7 +34,7 @@ public class GeneratorsHandler extends AbstractHandler {
     if ((dialog.getValue() != null) && (! dialog.getValue().equals(""))) {
       String target = dialog.getValue();
     
-      String appfolder = resource.getProject().getLocation().append("app").toOSString();
+      String appfolder = location.append("app").toOSString();
     
       CouchApplicationType couchapp = CouchApplication.getInstance();
       
