@@ -3,6 +3,7 @@ package com.pittypanda.plugins.couch.commands;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
@@ -41,6 +42,10 @@ public class GeneratorsHandler extends AbstractHandler {
       String[] params = { "generate", generator, appfolder, target };
       System.out.println(couchapp.dispatch(params));
     }
+    
+    try {
+      resource.getProject().refreshLocal(IFolder.DEPTH_INFINITE, null);
+    } catch (Exception e) { }
     System.out.println(dialog.getValue());
     
     return null;
