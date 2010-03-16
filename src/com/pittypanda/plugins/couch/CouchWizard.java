@@ -63,7 +63,7 @@ public class CouchWizard extends Wizard implements INewWizard {
     monitor.beginTask("Creating CouchApp", 100);
     
     String dirName = page.getLocationPath() + "/" + page.getProjectName();
-    String fileName = dirName + "/couchapprc";
+    String fileName = dirName + "/couchapp.rc";
     
     try {
       IWorkspaceRoot      root        = ResourcesPlugin.getWorkspace().getRoot();

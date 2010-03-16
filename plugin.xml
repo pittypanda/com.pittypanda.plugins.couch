@@ -100,7 +100,7 @@
             locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
          <menu
                icon="icons/bridge.png"
-               label="Generate CouchDB">
+               label="CouchDB Generate">
             <command
                   commandId="com.pittypanda.plugins.couch.commands.view"
                   label="View..."
