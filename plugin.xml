@@ -99,7 +99,6 @@
       <menuContribution
             locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
          <menu
-               commandId="com.pittypanda.plugins.couch.commands.generate"
                icon="icons/bridge.png"
                label="Generate CouchDB">
             <command
