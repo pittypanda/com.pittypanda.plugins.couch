@@ -8,7 +8,8 @@ Bundle-Vendor: PITTYPANDA
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.ide,
- org.eclipse.core.resources
+ org.eclipse.core.resources,
+ org.eclipse.ui.forms
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: libraries/json_simple-1.1.jar,

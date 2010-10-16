@@ -37,7 +37,7 @@ public class PushHandler extends AbstractHandler {
     int selection = -1;
     
     try {
-      FileReader reader = new FileReader(location.append("couchapprc").toOSString());
+      FileReader reader = new FileReader(location.append("couchapp.rc").toOSString());
       
       JSONObject object = (JSONObject) parser.parse(reader);
       JSONObject couch  = (JSONObject) object.get("env");

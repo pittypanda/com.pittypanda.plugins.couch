@@ -227,4 +227,15 @@
             commandId="com.pittypanda.plugins.couch.commands.vendorx">
       </handler>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="com.pittypanda.plugins.couch.CouchConfiguration"
+            default="false"
+            extensions="rc"
+            icon="icons/rc.gif"
+            id="com.pittypanda.plugins.couch.editor"
+            name="couchapp.rc">
+      </editor>
+   </extension>
 </plugin>
