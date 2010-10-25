@@ -29,6 +29,8 @@ public class JythonObjectFactory {
     
     Properties props=new Properties();  
     props.setProperty("python.home", pythonHome);
+    props.setProperty("python.console.encoding", "UTF8");
+    props.setProperty("file.encoding", "UTF8");
     PySystemState.initialize(System.getProperties(), props, null);
     
     PySystemState state = new PySystemState();
