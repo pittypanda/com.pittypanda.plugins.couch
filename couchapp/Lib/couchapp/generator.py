@@ -3,17 +3,22 @@
 # This file is part of couchapp released under the Apache 2 license. 
 # See the NOTICE for more information.
 
+from __future__ import with_statement
+
+import logging
 import os
 import shutil
 import sys
 
 from couchapp.errors import AppError
 from couchapp import localdoc
-from couchapp.utils import user_path, relpath
+from couchapp.util import user_path, relpath
 
-__all__ = ["generate_app", "generate_function"]
+__all__ = ["generate_app", "generate_function", "generate"]
 
-def generate_app(ui, path, template=None, create=False):
+logger = logging.getLogger(__name__)
+
+def generate_app(path, template=None, create=False):
     """ Generates a CouchApp in app_dir 
     
     :attr verbose: boolean, default False
@@ -65,16 +70,15 @@ def generate_app(ui, path, template=None, create=False):
     
     fid = os.path.join(appdir, '_id')
     if not os.path.isfile(fid):
-        f = open(fid, 'wb')
-        f.write('_design/%s' % os.path.split(appdir)[1])
-        f.close()
+        with open(fid, 'wb') as f:
+            f.write('_design/%s' % os.path.split(appdir)[1])
     
     if create:
-        doc = localdoc.instance(ui, path, create=True)
-
-    #ui.extensions.notify("post-generate", path)
+        doc = localdoc.document(path, create=True)
     
-def generate_function(ui, path, kind, name, template=None):
+    logger.info("%s generated." % path)
+    
+def generate_function(path, kind, name, template=None):
     functions_path = ['functions']
     if template:
         functions_path = []
@@ -100,6 +104,9 @@ def generate_function(ui, path, kind, name, template=None):
             targetpath = os.path.join(*template.split('/'))
             copy_helper(path, targetpath)
             return
+        elif kind == "spatial":
+            path = os.path.join(path, "spatial")
+            functions = [("spatial.js", "%s.js" % name )]
         else:
             path = os.path.join(path, "%ss" % kind)
             functions = [('%s.js' % kind, "%s.js" % name )]
@@ -115,7 +122,8 @@ def generate_function(ui, path, kind, name, template=None):
             try:
                 shutil.copy2(root, target_path)
             except:
-                ui.logger.info("%s not found in %s" % (template, os.path.join(*root_path[:-1])))
+                logger.warning("%s not found in %s" % (template, 
+                        os.path.join(*root_path[:-1])))
     else:
         raise AppError("Defaults templates not found. Check your install.")
         
@@ -142,19 +150,25 @@ def copy_helper(path, directory, tname="templates"):
                 except:
                     continue
             for f in files:
-                shutil.copy2(os.path.join(root, f), os.path.join(target_path, f))                
+                shutil.copy2(os.path.join(root, f), os.path.join(target_path, 
+                            f))                
     else:
-        raise AppError("Can't create a CouchApp in %s: default template not found." % (
-                path))
+        raise AppError(
+            "Can't create a CouchApp in %s: default template not found." % (
+            path))
                         
 def find_template_dir(name, directory=''):
-    paths = ['%s' % name, '../%s' % name]
+    paths = ['%s' % name, os.path.join('..', name)]
     if hasattr(sys, 'frozen'): # py2exe
         modpath = sys.executable
+    elif sys.platform == "win32" or os.name == "nt":
+        modpath = os.path.join(sys.prefix, "Lib", "site-packages",
+            "couchapp", "templates")
     else:
         modpath = __file__
         
-    default_locations = [os.path.join(os.path.dirname(modpath), p, directory) for p in paths]
+    default_locations = [os.path.join(os.path.dirname(modpath), p, 
+                        directory) for p in paths]
     
     if directory:
         user_locations = []
@@ -171,3 +185,17 @@ def find_template_dir(name, directory=''):
     if found:
         return template_dir
     return False
+    
+def generate(path, kind, name, **opts):
+    if kind not in ["app", "view", "list", "show", 'filter', 'function', 
+            'vendor', 'update', 'spatial']:
+        raise AppError(
+            "Can't generate %s in your couchapp. generator is unknown" % kind)
+
+    if kind == "app":
+        generate_app(path, template=opts.get("template"), 
+                create=opts.get('create', False))
+    else:
+        if name is None:
+            raise AppError("Can't generate %s function, name is missing" % kind)
+        generate_function(path, kind, name, opts.get("template"))

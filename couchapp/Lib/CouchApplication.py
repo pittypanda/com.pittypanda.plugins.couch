@@ -1,3 +1,6 @@
+from org.python.core import codecs
+codecs.setDefaultEncoding('utf-8')
+
 from com.pittypanda.plugins.couch.glue import CouchApplicationType
 
 import couchapp.dispatch

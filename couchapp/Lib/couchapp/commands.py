@@ -3,35 +3,46 @@
 # This file is part of couchapp released under the Apache 2 license. 
 # See the NOTICE for more information.
 
+import logging
 import os
+
 try:
-    import json
+    import desktopcouch
 except ImportError:
-    import couchapp.simplejson as json
+    desktopcouch = None
 
-import couchapp.app as app
-from couchapp.errors import ResourceNotFound, AppError
-from couchapp.extensions import get_extensions, load_extensions
-from couchapp import hooks
 
-def _maybe_reload(ui, path, new_path):
-    if path is None:
-        # we reload extensions and updaye confing
-        ui.updateconfig(new_path)
-        load_extensions(ui)
+from couchapp import clone_app
+from couchapp.errors import ResourceNotFound, AppError, BulkSaveError
+from couchapp import generator
+from couchapp.localdoc import document
+from couchapp import util
+from couchapp.vendors import vendor_install, vendor_update
 
-def init(ui, path, *args, **opts):
+logger = logging.getLogger(__name__)
+
+
+def hook(conf, path, hook_type, *args, **kwargs):
+    if hook_type in conf.hooks:
+        for h in conf.hooks.get(hook_type):
+            h(path, hook_type, *args, **kwargs)
+
+def init(conf, path, *args, **opts):
     if not args:
-        dest = path
+        dest = os.getcwd()
     else:
         dest = os.path.normpath(os.path.join(os.getcwd(), args[0]))
         
     if dest is None:
-        raise AppError("You aren't in a couchapp.")
-    app.document(ui, dest, True)
+        raise AppError("Unknown dest")
+        
+    document(dest, True)
 
-def push(ui, path, *args, **opts):
+def push(conf, path, *args, **opts):
     export = opts.get('export', False)
+    noatomic = opts.get('no_atomic', False)
+    browse = opts.get('browse', False)
+    force = opts.get('force', False)
     dest = None
     doc_path = None
     if len(args) < 2:
@@ -50,63 +61,78 @@ def push(ui, path, *args, **opts):
     if doc_path is None:
         raise AppError("You aren't in a couchapp.")
     
-    _maybe_reload(ui, path, doc_path)
-    
-    localdoc = app.document(ui, doc_path, create=False, docid=opts.get('docid'))
+    conf.update(doc_path)
+
+    doc = document(doc_path, create=False, 
+                        docid=opts.get('docid'))
     if export:
         if opts.get('output'):
-            ui.write_json(opts.get('output'), str(localdoc))
+            util.write_json(opts.get('output'), str(doc))
         else:
-            print str(localdoc)
+            print str(doc)
         return 0
-    dbs = ui.get_dbs(dest)
-    hooks.hook(ui, doc_path, "pre-push", dbs=dbs)    
-    localdoc.push(dbs, opts.get('no_atomic', False))
-    hooks.hook(ui, doc_path, "post-push", dbs=dbs)
+    dbs = conf.get_dbs(dest)
+    
+    hook(conf, doc_path, "pre-push", dbs=dbs)    
+    doc.push(dbs, noatomic, browse, force)
+    hook(conf, doc_path, "post-push", dbs=dbs)
     
     docspath = os.path.join(doc_path, '_docs')
     if os.path.exists(docspath):
-        pushdocs(ui, docspath, dest, *args, **opts)
+        pushdocs(conf, docspath, dest, *args, **opts)
     return 0
 
-def pushapps(ui, source, dest, *args, **opts):
+def pushapps(conf, source, dest, *args, **opts):
     export = opts.get('export', False)
     noatomic = opts.get('no_atomic', False)
-    dbs = ui.get_dbs(dest)
+    browse = opts.get('browse', False)
+    dbs = conf.get_dbs(dest)
     apps = []
     source = os.path.normpath(os.path.join(os.getcwd(), source))
     for d in os.listdir(source):
         appdir = os.path.join(source, d)
-        print appdir
-        if os.path.isdir(appdir) and os.path.isfile(os.path.join(appdir, '.couchapprc')):
-            localdoc = app.document(ui, appdir)
-            hooks.hook(ui, appdir, "pre-push", dbs=dbs, pushapps=True)
+        if os.path.isdir(appdir) and os.path.isfile(os.path.join(appdir, 
+                                        '.couchapprc')):
+            doc = document(appdir)
+            hook(conf, appdir, "pre-push", dbs=dbs, pushapps=True)
             if export or not noatomic:
-                apps.append(localdoc)
+                apps.append(doc)
             else:
-                localdoc.push(dbs, True)
-            hooks.hook(ui, appdir, "post-push", dbs=dbs, pushapps=True)
+                doc.push(dbs, True, browse)
+            hook(conf, appdir, "post-push", dbs=dbs, pushapps=True)
     if apps:
         if export:
             docs = []
-            docs.append([localdoc.doc() for localdoc in apps])
+            docs.append([doc.doc() for doc in apps])
             jsonobj = {'docs': docs}
             if opts.get('output') is not None:
-                ui.write_json(opts.get('output'), json.dumps(jsonobj))
+                util.write_json(opts.get('output'), util.json.dumps(jsonobj))
             else:
-                print json.dumps(jsonobj)
+                print util.json.dumps(jsonobj)
             return 0
         else:
             for db in dbs:
                 docs = []
                 docs = [doc.doc(db) for doc in apps]
-                db.save_docs(docs)
+                try:
+                    db.save_docs(docs)
+                except BulkSaveError, e:
+                    docs1 = []
+                    for doc in e.errors:
+                        try:
+                            doc['_rev'] = db.last_rev(doc['_id'])
+                            docs1.append(doc)
+                        except ResourceNotFound:
+                            pass 
+                    if docs1:
+                        db.save_docs(docs1)
     return 0
   
-def pushdocs(ui, source, dest, *args, **opts):
+def pushdocs(conf, source, dest, *args, **opts):
     export = opts.get('export', False)
     noatomic = opts.get('no_atomic', False)
-    dbs = ui.get_dbs(dest)
+    browse = opts.get('browse', False)
+    dbs = conf.get_dbs(dest)
     docs = []
     for d in os.listdir(source):
         docdir = os.path.join(source, d)
@@ -114,22 +140,21 @@ def pushdocs(ui, source, dest, *args, **opts):
             continue
         elif os.path.isfile(docdir):
             if d.endswith(".json"):
-                doc = ui.read_json(docdir)
+                doc = util.read_json(docdir)
                 docid, ext = os.path.splitext(d)
-                
                 doc.setdefault('_id', docid)
                 doc.setdefault('couchapp', {})
                 if export or not noatomic:
                     docs.append(doc)
                 else:
                     for db in dbs:
-                        db.save_doc(doc)
+                        db.save_doc(doc, force_update=True)
         else:
-            doc = app.document(ui, docdir)
+            doc = document(docdir, is_ddoc=False)
             if export or not noatomic:
                 docs.append(doc)
             else:
-                doc.push(dbs, True)
+                doc.push(dbs, True, browse)
     if docs:
         if export:
             docs1 = []
@@ -140,9 +165,9 @@ def pushdocs(ui, source, dest, *args, **opts):
                     docs1.append(doc)
             jsonobj = {'docs': docs}
             if opts.get('output') is not None:
-                ui.write_json(opts.get('output'), json.dumps(jsonobj))
+                util.write_json(opts.get('output'), util.json.dumps(jsonobj))
             else:
-                print json.dumps(jsonobj)
+                print util.json.dumps(jsonobj)
         else:
             for db in dbs:
                 docs1 = []
@@ -152,25 +177,37 @@ def pushdocs(ui, source, dest, *args, **opts):
                     else:
                         newdoc = doc.copy()
                         try:
-                            olddoc = db.get_doc(doc['_id'])
-                            newdoc.update({'_rev': olddoc['_rev']})
+                            rev = db.last_rev(doc['_id'])
+                            newdoc.update({'_rev': rev})
                         except ResourceNotFound:
                             pass
                         docs1.append(newdoc)
-                db.save_docs(docs1)
+                try:
+                    db.save_docs(docs1)
+                except BulkSaveError, e:
+                    # resolve conflicts
+                    docs1 = []
+                    for doc in e.errors:
+                        try:
+                            doc['_rev'] = db.last_rev(doc['_id'])
+                            docs1.append(doc)
+                        except ResourceNotFound:
+                            pass 
+                if docs1:
+                    db.save_docs(docs1)
     return 0
     
-def clone(ui, source, *args, **opts):
+def clone(conf, source, *args, **opts):
     if len(args) > 0:
         dest = args[0]
     else:
         dest = None 
-    hooks.hook(ui, dest, "pre-clone", source=source)
-    app.clone(ui, source, dest, rev=opts.get('rev'))
-    hooks.hook(ui, dest, "post-clone", source=source)
+    hook(conf, dest, "pre-clone", source=source)
+    clone_app.clone(source, dest, rev=opts.get('rev'))
+    hook(conf, dest, "post-clone", source=source)
     return 0
 
-def generate(ui, path, *args, **opts):
+def generate(conf, path, *args, **opts):
     dest = path
     if len(args) < 1:
         raise AppError("Can't generate function, name or path is missing")
@@ -193,14 +230,12 @@ def generate(ui, path, *args, **opts):
         else:
             raise AppError("You aren't in a couchapp.")
     
-    hooks.hook(ui, dest, "pre-generate")    
-    app.generate(ui, dest, kind, name, **opts)
-    _maybe_reload(ui, path, dest)
-    hooks.hook(ui, dest, "post-generate")
-       
+    hook(conf, dest, "pre-generate")    
+    generator.generate(dest, kind, name, **opts)
+    hook(conf, dest, "post-generate")
     return 0
     
-def vendor(ui, path, *args, **opts):
+def vendor(conf, path, *args, **opts):
     if len(args) < 1:
         raise AppError("missing command")
     dest = path
@@ -220,10 +255,9 @@ def vendor(ui, path, *args, **opts):
             raise AppError("You aren't in a couchapp.")
             
         dest = os.path.normpath(os.path.join(os.getcwd(), dest))
-        _maybe_reload(ui, path, dest)
-        hooks.hook(ui, dest, "pre-vendor", source=source, action="install")
-        app.vendor_install(ui, dest, source, *args, **opts)
-        hooks.hook(ui, dest, "post-vendor", source=source, action="install")
+        hook(conf, dest, "pre-vendor", source=source, action="install")
+        vendor_install(conf, dest, source, *args, **opts)
+        hook(conf, dest, "post-vendor", source=source, action="install")
     else:
         vendorname = None
         if len(args) == 1:
@@ -235,26 +269,48 @@ def vendor(ui, path, *args, **opts):
             raise AppError("You aren't in a couchapp.")
             
         dest = os.path.normpath(os.path.join(os.getcwd(), dest))
-        hooks.hook(ui, dest, "pre-vendor", name=vendorname, action="update")
-        app.vendor_update(ui, dest, vendorname, *args, **opts)
-        hooks.hook(ui, dest, "pre-vendor", name=vendorname, action="update")
+        hook(conf, dest, "pre-vendor", name=vendorname, action="update")
+        vendor_update(conf, dest, vendorname, *args, **opts)
+        hook(conf, dest, "pre-vendor", name=vendorname, action="update")
     return 0
-   
-def version(ui, *args, **opts):
+
+
+def browse(conf, path, *args, **opts):
+    dest = None
+    doc_path = None
+    if len(args) < 2:
+        doc_path = path
+        if args:
+            dest = args[0]
+    else:
+        doc_path = os.path.normpath(os.path.join(os.getcwd(), args[0]))
+        dest = args[1]
+    if doc_path is None:
+        raise AppError("You aren't in a couchapp.")
+    
+    conf.update(doc_path)
+
+    doc = document(doc_path, create=False, 
+                        docid=opts.get('docid'))
+
+    dbs = conf.get_dbs(dest)
+    doc.browse(dbs)
+
+def version(conf, *args, **opts):
     from couchapp import __version__
     
     print "Couchapp (version %s)" % __version__
-    print "Copyright 2008,2009 Benoît Chesneau <benoitc@e-engura.org>"
+    print "Copyright 2008-2010 Benoît Chesneau <benoitc@e-engura.org>"
     print "Licensed under the Apache License, Version 2.0." 
     print ""
     if opts.get('help', False):
-        usage(ui, *args, **opts)
+        usage(conf, *args, **opts)
     
     return 0
     
-def usage(ui, *args, **opts):
+def usage(conf, *args, **opts):
     if opts.get('version', False):
-        version(ui, *args, **opts)
+        version(conf, *args, **opts)
     print "couchapp [OPTIONS] [CMD] [OPTIONSCMD] [ARGS,...]"
     print "usage:"
     print ""
@@ -274,13 +330,6 @@ def usage(ui, *args, **opts):
         for opt in opts[1]:
             print_option(opt)
         print ""
-    print "loaded extensions:"
-    print "------------------"
-    print ""
-    for name, mod in get_extensions():
-        name = getattr(mod, '__extension_name__', name)
-        print "%s" % name
-    print ""
     return 0
 
 def print_option(opt):
@@ -294,6 +343,7 @@ def print_option(opt):
         print "--%s%s\t %s" % (opt[1], default, opt[3])
     
 globalopts = [
+    ('d', 'debug', None, "debug mode"),
     ('h', 'help', None, "display help and exit"),
     ('', 'version', None, "display version and exit"),
     ('v', 'verbose', None, "enable additionnal output"),
@@ -303,7 +353,9 @@ globalopts = [
 pushopts = [
     ('', 'no-atomic', False, "send attachments one by one"),
     ('', 'export', False, "don't do push, just export doc to stdout"),
-    ('', 'output', '', "if export is selected, output to the file")
+    ('', 'output', '', "if export is selected, output to the file"),
+    ('b', 'browse', False, "open the couchapp in the browser"),
+    ('', 'force', False, "force attachments sending")
 ]
     
 table = {
@@ -335,6 +387,10 @@ table = {
         (vendor,
         [("f", 'force', False, "force install or update")],
         "[OPTION]...[-f] install|update [COUCHAPPDIR] SOURCE"),
+    "browse":
+        (browse,
+        [],
+        "[COUCHAPPDIR] DEST"),
     "help":
         (usage, [], ""),
     "version":
