@@ -23,7 +23,8 @@ from couchapp.errors import ResourceNotFound, AppError
 from couchapp.macros import package_shows, package_views
 from couchapp import util
 
-if os.name == 'nt':
+#if os.name == 'nt':
+if os.get_os_type() == 'nt':
     def _replace_backslash(name):
         return name.replace("\\", "/")
 else:
